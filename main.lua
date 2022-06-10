@@ -27,7 +27,7 @@ end
 STRING.install()
 Zenitha.setAppName('ZED')
 Zenitha.setVersionText(VERSION.appVer)
-Zenitha.setFirstScene('_editor')
+Zenitha.setFirstScene('editor')
 Zenitha.setMaxFPS(60)
 Zenitha.setUpdateFreq(100)
 Zenitha.setDrawFreq(100)
@@ -37,5 +37,7 @@ Zenitha.setClickFX(false)
 SCR.setSize(1400,900)
 
 DEBUG.checkLoadTime("Configuring Zenitha")
+--------------------------------------------------------------
+SCN.add('editor',require'scene/editor')
 --------------------------------------------------------------
 DEBUG.logLoadTime()
