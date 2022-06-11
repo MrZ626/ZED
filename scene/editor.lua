@@ -1540,7 +1540,8 @@ function directPad:getDirection()
     end
 end
 function directPad:update(dt)
-    if self.touchID and self.barDist>=self.r2 then
+    local P=activePages[curPage]
+    if P and self.touchID and self.barDist>=self.r2 then
         local dx,dy=self.barDist/self.r*cos(self.barAngle),self.barDist/self.r*sin(self.barAngle)
 
         local a=self:getDirection()
@@ -1555,17 +1556,17 @@ function directPad:update(dt)
             if dx>0 then
                 if self.moveX<=0 then
                     self.moveX=0
-                    scene.keyDown('right')
+                    P:moveCursor('-right'..(ifSelecting() and' -hold' or ''))
                 end
             else
                 if self.moveX>=0 then
                     self.moveX=0
-                    scene.keyDown('left')
+                    P:moveCursor('-left'..(ifSelecting() and' -hold' or ''))
                 end
             end
             self.moveX=self.moveX+dx
             if abs(self.moveX)>1 then
-                scene.keyDown(self.moveX>0 and 'right' or 'left')
+                P:moveCursor((self.moveX>0 and '-right' or '-left')..(ifSelecting() and' -hold' or ''))
                 self.moveX=self.moveX*.8
             end
         end
@@ -1575,17 +1576,17 @@ function directPad:update(dt)
             if dy>0 then
                 if self.moveY<=0 then
                     self.moveY=0
-                    scene.keyDown('down')
+                    P:moveCursor('-down'..(ifSelecting() and' -hold' or ''))
                 end
             else
                 if self.moveY>=0 then
                     self.moveY=0
-                    scene.keyDown('up')
+                    P:moveCursor('-up'..(ifSelecting() and' -hold' or ''))
                 end
             end
             self.moveY=self.moveY+dy
             if abs(self.moveY)>1 then
-                scene.keyDown(self.moveY>0 and 'down' or 'up')
+                P:moveCursor((self.moveY>0 and '-down' or '-up')..(ifSelecting() and' -hold' or ''))
                 self.moveY=self.moveY*.8
             end
         end
