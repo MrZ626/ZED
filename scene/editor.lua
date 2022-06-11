@@ -1592,7 +1592,6 @@ function directPad:update(dt)
     end
 end
 function directPad:draw()
-    gc.push('transform')
     gc.replaceTransform(self.xOy)
     gc.translate(self.x,self.y)
 
@@ -1629,7 +1628,40 @@ function directPad:draw()
     gc.circle('line',0,0,self.r)
     gc.setColor(.8,1,.9,.6)
     gc.circle('fill',self.barDist*cos(self.barAngle),self.barDist*sin(self.barAngle),self.r2)
-    gc.pop()
+end
+
+local showTouches={}
+function showTouches:add(T)
+    ins(self,{
+        aliveTimer=0,
+        T=T,
+    })
+end
+function showTouches:update(dt)
+    for i=#self,1,-1 do
+        local touch=self[i]
+        if touch.T.destroyed then
+            touch.aliveTimer=touch.aliveTimer-dt*5
+            if touch.aliveTimer<=0 then
+                rem(self,i)
+            end
+        elseif touch.aliveTimer<1 then
+            touch.aliveTimer=min(touch.aliveTimer+dt*5,1)
+        end
+    end
+end
+function showTouches:draw()
+    gc.replaceTransform(SCR.xOy)
+    gc.setLineWidth(3)
+    for i=1,#self do
+        local touch=self[i]
+        gc.setColor(1,1,1,touch.aliveTimer*.7)
+        gc.circle('line',touch.T.x,touch.T.y,100-30*touch.aliveTimer^.5)
+        if touch.T.keep then
+            gc.setColor(1,1,1,touch.aliveTimer*.3)
+            gc.circle('fill',touch.T.x,touch.T.y,100-30*touch.aliveTimer^.5)
+        end
+    end
 end
 
 -------------------------------------------------------------
@@ -1769,7 +1801,9 @@ function scene.touchDown(x,y,id)
         return
     end
 
-    ins(touches,{x=x,y=y,id=id,keep=true,time=getTime()})
+    local T={x=x,y=y,id=id,keep=true,time=getTime()}
+    ins(touches,T)
+    showTouches:add(T)
 end
 function scene.touchUp(x,y,id)
     if directPad.touchID==id then
@@ -1777,6 +1811,7 @@ function scene.touchUp(x,y,id)
     else
         for i=1,#touches do
             if touches[i].id==id then
+                touches[i].destroyed=true
                 local T=rem(touches,i)
                 if T.keep and getTime()-T.time<.26 then
                     scene.mouseDown(x,y,1)
@@ -1792,9 +1827,13 @@ function scene.touchMove(x,y,dx,dy,id)
     else
         for i=1,#touches do
             local T=touches[i]
-            if T.keep and T.id==id then
-                if (T.x-x)^2+(T.y-y)^2>=62 then
-                    T.keep=false
+            if T.id==id then
+                if T.keep then
+                    if (T.x-x)^2+(T.y-y)^2>=62 then
+                        T.keep=false
+                    end
+                else
+                    T.x,T.y=x,y
                 end
                 break
             end
@@ -1822,6 +1861,7 @@ function scene.update(dt)
             touchMenu[i]:update(dt)
         end
         directPad:update(dt)
+        showTouches:update(dt)
     end
 
     clipboardFreshCD=clipboardFreshCD+dt
@@ -1864,6 +1904,7 @@ function scene.draw()
             touchMenu[i]:draw()
         end
         directPad:draw()
+        showTouches:draw()
     end
 end
 
